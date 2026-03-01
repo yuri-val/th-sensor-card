@@ -176,6 +176,72 @@
 
     .card-wrap { width: 100%; }
     .card-wrap.w150 { width: 150px; }
+
+    /* ── Screenshot targets ──────────────────────────────────────────────────── */
+    .shots-section { margin-top: 48px; }
+
+    .shots-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .shots-hint {
+      font-size: 12px;
+      color: var(--secondary-text-color);
+      opacity: 0.6;
+      margin-bottom: 20px;
+    }
+    .shots-hint code {
+      font-family: monospace;
+      background: rgba(128,128,128,0.15);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .shots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 220px));
+      gap: 24px;
+      align-items: start;
+    }
+    .shot-group { display: flex; flex-direction: column; gap: 10px; }
+    .shot-label {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: monospace;
+      color: var(--secondary-text-color);
+      letter-spacing: 0.03em;
+      user-select: all;
+    }
+    .shot-wrap { width: 100%; }
+    .shot-wrap.w100 { width: 100px; }
+
+    /* Isolated theme scopes — override CSS vars regardless of page theme */
+    .dark-scope {
+      --ha-card-background:    #1c1c1e;
+      --card-background-color: #1c1c1e;
+      --primary-text-color:    #e1e1e1;
+      --secondary-text-color:  #9d9d9d;
+      --divider-color:         rgba(255,255,255,0.1);
+      --error-color:           #cf6679;
+      --warning-color:         #e8b529;
+      --success-color:         #4ade80;
+    }
+    .light-scope {
+      --ha-card-background:    #ffffff;
+      --card-background-color: #ffffff;
+      --primary-text-color:    #212121;
+      --secondary-text-color:  #727272;
+      --divider-color:         rgba(0,0,0,0.12);
+      --error-color:           #db4437;
+      --warning-color:         #e67e00;
+      --success-color:         #0a8f0a;
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 14px;
+    }
   </style>
 </head>
 
@@ -334,5 +400,69 @@
     // ── Init ──────────────────────────────────────────────────────────────────
     update();
   </script>
+  <!-- ── Screenshot targets ───────────────────────────────────────────────── -->
+  <section class="shots-section">
+    <h2 class="shots-title">Screenshot targets</h2>
+    <p class="shots-hint">Screenshot each card and save to <code>assets/</code> using the filename shown below the card.</p>
+    <div class="shots-grid">
+
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope" id="shot-dark"></div>
+        <div class="shot-label">assets/dark.png</div>
+      </div>
+
+      <div class="shot-group">
+        <div class="shot-wrap light-scope" id="shot-light"></div>
+        <div class="shot-label">assets/light.png</div>
+      </div>
+
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope" id="shot-warning"></div>
+        <div class="shot-label">assets/battery-warning.png</div>
+      </div>
+
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope" id="shot-critical"></div>
+        <div class="shot-label">assets/battery-critical.png</div>
+      </div>
+
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope" id="shot-bg"></div>
+        <div class="shot-label">assets/custom-bg.png</div>
+      </div>
+
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope w100" id="shot-small"></div>
+        <div class="shot-label">assets/picture-elements.png</div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    // ── Static screenshot cards ───────────────────────────────────────────────
+    (function () {
+      function shot(wrapId, config, temp, hum, bat) {
+        const el = document.createElement('th-sensor-card');
+        el.setConfig({ temperature: T, humidity: H, battery: B, ...config });
+        el.hass = {
+          states: {
+            [T]: { state: String(temp) },
+            [H]: { state: String(hum) },
+            [B]: { state: String(bat) },
+          }
+        };
+        document.getElementById(wrapId).appendChild(el);
+      }
+
+      shot('shot-dark',     { name: 'Bedroom' },                          24.2, 45.1, 72);
+      shot('shot-light',    { name: 'Bedroom' },                          24.2, 45.1, 72);
+      shot('shot-warning',  { name: 'Bedroom' },                          22.4, 56.2, 22);
+      shot('shot-critical', { name: 'Bedroom' },                          19.8, 63.0,  8);
+      shot('shot-bg',       { name: 'Bedroom', background: '#1a2744' },   24.2, 45.1, 72);
+      shot('shot-small',    { name: 'Bedroom' },                          24.2, 45.1, 72);
+    })();
+  </script>
+
 </body>
 </html>

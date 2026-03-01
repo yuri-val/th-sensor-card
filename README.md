@@ -4,8 +4,19 @@ A compact, square Lovelace card for Home Assistant that displays temperature, hu
 
 Scales cleanly at any size using CSS container queries — works equally well as a standalone card or placed inside `picture-elements` over a floorplan.
 
-![Card preview](preview.png)
+## Screenshots
 
+| Dark | Light | Custom background |
+|:---:|:---:|:---:|
+| ![Dark theme](assets/dark.png) | ![Light theme](assets/light.png) | ![Custom background](assets/custom-bg.png) |
+
+| Battery warning | Battery critical | picture-elements |
+|:---:|:---:|:---:|
+| ![Battery warning](assets/battery-warning.png) | ![Battery critical](assets/battery-critical.png) | ![picture-elements](assets/picture-elements.png) |
+
+| Real example |
+|:---:|
+| ![Real example](assets/real-example.png) |
 ---
 
 ## Features
