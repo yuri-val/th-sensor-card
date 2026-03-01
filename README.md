@@ -109,6 +109,17 @@ elements:
 
 ---
 
+## Temperature color thresholds
+
+| Range      | Color   |
+|------------|---------|
+| < 0 °C     | 🔵 blue `#60a5fa` |
+| 0 – 24 °C  | neutral (`--primary-text-color`) |
+| 24 – 32 °C | 🟠 orange `#fb923c` |
+| > 32 °C    | 🔴 red `#f87171` |
+
+---
+
 ## Battery color thresholds
 
 | Level      | Color   |

@@ -61,6 +61,15 @@ class ThSensorCard extends HTMLElement {
     return 'var(--success-color, #4CAF50)';
   }
 
+  _tempColor(raw) {
+    if (raw === null) return 'var(--primary-text-color)';
+    const v = parseFloat(raw);
+    if (v <  0)  return '#60a5fa';  // cold  — blue
+    if (v < 24)  return 'var(--primary-text-color)';  // comfortable — neutral
+    if (v < 32)  return '#fb923c';  // warm  — orange
+    return '#f87171';               // hot   — red
+  }
+
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   _render() {
@@ -73,7 +82,8 @@ class ThSensorCard extends HTMLElement {
     const temp   = tRaw !== null ? parseFloat(tRaw).toFixed(1) : '--';
     const hum    = hRaw !== null ? parseFloat(hRaw).toFixed(1) : '--';
     const bat    = bRaw !== null ? `${parseInt(bRaw, 10)}%`    : '--';
-    const batClr = this._batteryColor(bRaw);
+    const tempClr = this._tempColor(tRaw);
+    const batClr  = this._batteryColor(bRaw);
 
     const name = this._config.name;
     const bg   = this._config.background;
@@ -136,7 +146,7 @@ class ThSensorCard extends HTMLElement {
           font-weight: 900;
           line-height: 1;
           letter-spacing: -0.02em;
-          color: var(--primary-text-color);
+          color: ${tempClr};
         }
         .temp-unit {
           font-size: 10cqw;
