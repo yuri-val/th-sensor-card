@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TH Sensor Card · Preview</title>
+  <script src="./th-sensor-card.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── HA CSS vars (dark theme default) ────────────────────────────────────── */
+    :root {
+      --ha-card-background:    #1c1c1e;
+      --ha-card-border-radius: 12px;
+      --ha-card-box-shadow:    none;
+      --primary-text-color:    #e1e1e1;
+      --secondary-text-color:  #9d9d9d;
+      --divider-color:         rgba(255,255,255,0.1);
+      --error-color:           #cf6679;
+      --warning-color:         #e8b529;
+      --success-color:         #4ade80;
+      --card-background-color: #1c1c1e;
+    }
+    body.light {
+      --ha-card-background:    #ffffff;
+      --card-background-color: #ffffff;
+      --primary-text-color:    #212121;
+      --secondary-text-color:  #727272;
+      --divider-color:         rgba(0,0,0,0.12);
+      --error-color:           #db4437;
+      --warning-color:         #e67e00;
+      --success-color:         #0a8f0a;
+    }
+
+    /* ── Page ────────────────────────────────────────────────────────────────── */
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: #111;
+      color: #e1e1e1;
+      min-height: 100vh;
+      padding: 24px;
+      transition: background 0.2s, color 0.2s;
+    }
+    body.light { background: #f0f0f0; color: #212121; }
+
+    /* ── Header ──────────────────────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+
+    .btn {
+      padding: 7px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      color: inherit;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: rgba(255,255,255,0.1); }
+    body.light .btn { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.04); }
+    body.light .btn:hover { background: rgba(0,0,0,0.09); }
+
+    /* ── Controls panel ──────────────────────────────────────────────────────── */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 20px;
+      background: var(--ha-card-background);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+
+    .ctrl-group { display: flex; flex-direction: column; gap: 8px; }
+
+    .ctrl-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .ctrl-val {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--primary-text-color);
+      min-height: 24px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #60a5fa;
+      cursor: pointer;
+    }
+
+    /* toggle switch */
+    .row { display: flex; align-items: center; gap: 10px; }
+    .toggle {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 38px; height: 21px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    body.light .toggle { background: rgba(0,0,0,0.2); }
+    .toggle:checked { background: #60a5fa; }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 17px; height: 17px;
+      border-radius: 50%;
+      background: white;
+      top: 2px; left: 2px;
+      transition: left 0.18s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle:checked::after { left: 19px; }
+    .toggle-lbl { font-size: 13px; color: var(--secondary-text-color); }
+
+    input[type="color"] {
+      width: 36px; height: 28px;
+      padding: 2px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background: none;
+      cursor: pointer;
+    }
+    body.light input[type="color"] { border-color: rgba(0,0,0,0.15); }
+
+    /* battery threshold hint */
+    .bat-hints {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .bat-hint {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--secondary-text-color);
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Card previews ───────────────────────────────────────────────────────── */
+    .previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 220px));
+      gap: 24px;
+      align-items: start;
+    }
+
+    .preview { display: flex; flex-direction: column; gap: 10px; }
+
+    .preview-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .card-wrap { width: 100%; }
+    .card-wrap.w150 { width: 150px; }
+  </style>
+</head>
+
+<body>
+  <!-- ── Header ────────────────────────────────────────────────────────────── -->
+  <div class="header">
+    <h1>🌡️ TH Sensor Card &nbsp;·&nbsp; Preview</h1>
+    <button class="btn" id="theme-btn" onclick="toggleTheme()">☀️ Light theme</button>
+  </div>
+
+  <!-- ── Controls ──────────────────────────────────────────────────────────── -->
+  <div class="controls">
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Temperature</span>
+      <span class="ctrl-val" id="lbl-temp"></span>
+      <input type="range" id="sl-temp" min="-20" max="50" step="0.1" value="24.2" oninput="update()">
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Humidity</span>
+      <span class="ctrl-val" id="lbl-hum"></span>
+      <input type="range" id="sl-hum" min="0" max="100" step="0.1" value="45.1" oninput="update()">
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Battery</span>
+      <span class="ctrl-val" id="lbl-bat"></span>
+      <input type="range" id="sl-bat" min="0" max="100" step="1" value="72" oninput="update()">
+      <div class="bat-hints">
+        <div class="bat-hint"><div class="dot" style="background:var(--success-color)"></div>&gt;30%</div>
+        <div class="bat-hint"><div class="dot" style="background:var(--warning-color)"></div>15–30%</div>
+        <div class="bat-hint"><div class="dot" style="background:var(--error-color)"></div>&lt;15%</div>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Name</span>
+      <div class="row">
+        <input type="checkbox" class="toggle" id="tog-name" checked onchange="update()">
+        <span class="toggle-lbl">Bedroom</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Sensor state</span>
+      <div class="row">
+        <input type="checkbox" class="toggle" id="tog-unavail" onchange="update()">
+        <span class="toggle-lbl">unavailable</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Custom background</span>
+      <div class="row">
+        <input type="checkbox" class="toggle" id="tog-bg" onchange="update()">
+        <input type="color" id="col-bg" value="#1a2744" oninput="update()">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Previews ──────────────────────────────────────────────────────────── -->
+  <div class="previews">
+
+    <div class="preview">
+      <div class="preview-label">With name · standalone</div>
+      <div class="card-wrap" id="wrap-name"></div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-label">Without name · standalone</div>
+      <div class="card-wrap" id="wrap-noname"></div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-label">picture-elements · 150 px</div>
+      <div class="card-wrap w150" id="wrap-small"></div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-label">Custom background</div>
+      <div class="card-wrap" id="wrap-bg"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Entity IDs (mocked) ───────────────────────────────────────────────────
+    const T = 'sensor.preview_temp';
+    const H = 'sensor.preview_hum';
+    const B = 'sensor.preview_bat';
+
+    // ── Create card elements ──────────────────────────────────────────────────
+    function makeCard(wrapId, extra = {}) {
+      const el = document.createElement('th-sensor-card');
+      el.setConfig({ temperature: T, humidity: H, battery: B, ...extra });
+      document.getElementById(wrapId).appendChild(el);
+      return el;
+    }
+
+    const cName   = makeCard('wrap-name',   { name: 'Bedroom' });
+    const cNoName = makeCard('wrap-noname');
+    const cSmall  = makeCard('wrap-small',  { name: 'Bedroom' });
+    const cBg     = makeCard('wrap-bg',     { name: 'Bedroom' });
+
+    // ── Build mock hass ───────────────────────────────────────────────────────
+    function mockHass(temp, hum, bat, unavail) {
+      const s = v => ({ state: unavail ? 'unavailable' : String(v) });
+      return { states: { [T]: s(temp), [H]: s(hum), [B]: s(bat) } };
+    }
+
+    // ── Update all cards ──────────────────────────────────────────────────────
+    function update() {
+      const temp    = parseFloat(document.getElementById('sl-temp').value);
+      const hum     = parseFloat(document.getElementById('sl-hum').value);
+      const bat     = parseInt(document.getElementById('sl-bat').value);
+      const hasName = document.getElementById('tog-name').checked;
+      const unavail = document.getElementById('tog-unavail').checked;
+      const bgOn    = document.getElementById('tog-bg').checked;
+      const bgCol   = document.getElementById('col-bg').value;
+
+      // Value labels
+      document.getElementById('lbl-temp').textContent = `${temp.toFixed(1)} °C`;
+      document.getElementById('lbl-hum').textContent  = `${hum.toFixed(1)} %`;
+      document.getElementById('lbl-bat').textContent  = `${bat} %`;
+
+      const hass = mockHass(temp, hum, bat, unavail);
+
+      // Push fresh hass to all cards (covers static cards: cNoName, cSmall)
+      [cName, cNoName, cSmall, cBg].forEach(c => { c.hass = hass; });
+
+      // Reconfigure cards whose config changes dynamically
+      cName.setConfig({
+        temperature: T, humidity: H, battery: B,
+        ...(hasName ? { name: 'Bedroom' } : {}),
+      });
+      cBg.setConfig({
+        temperature: T, humidity: H, battery: B,
+        name: 'Bedroom',
+        ...(bgOn ? { background: bgCol } : {}),
+      });
+
+      // Re-push hass after setConfig (setConfig re-renders; hass must be set)
+      cName.hass = hass;
+      cBg.hass   = hass;
+    }
+
+    // ── Theme toggle ──────────────────────────────────────────────────────────
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      document.getElementById('theme-btn').textContent =
+        document.body.classList.contains('light') ? '🌙 Dark theme' : '☀️ Light theme';
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    update();
+  </script>
+</body>
+</html>
