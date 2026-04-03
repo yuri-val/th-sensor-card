@@ -259,11 +259,11 @@
       <span class="ctrl-label">Temperature</span>
       <span class="ctrl-val" id="lbl-temp"></span>
       <input type="range" id="sl-temp" min="-20" max="50" step="0.1" value="24.2" oninput="update()">
-      <div class="bat-hints">
-        <div class="bat-hint"><div class="dot" style="background:#60a5fa"></div>&lt;0°</div>
-        <div class="bat-hint"><div class="dot" style="background:var(--primary-text-color)"></div>0–24°</div>
-        <div class="bat-hint"><div class="dot" style="background:#fb923c"></div>24–32°</div>
-        <div class="bat-hint"><div class="dot" style="background:#f87171"></div>&gt;32°</div>
+      <div class="bat-hints" id="temp-hints">
+        <div class="bat-hint"><div class="dot" style="background:#60a5fa"></div><span>&lt;0°C</span></div>
+        <div class="bat-hint"><div class="dot" style="background:var(--primary-text-color)"></div><span>0–24°C</span></div>
+        <div class="bat-hint"><div class="dot" style="background:#fb923c"></div><span>24–32°C</span></div>
+        <div class="bat-hint"><div class="dot" style="background:#f87171"></div><span>&gt;32°C</span></div>
       </div>
     </div>
 
@@ -297,6 +297,14 @@
       <div class="row">
         <input type="checkbox" class="toggle" id="tog-unavail" onchange="update()">
         <span class="toggle-lbl">unavailable</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Unit</span>
+      <div class="row">
+        <input type="checkbox" class="toggle" id="tog-unit" onchange="update()">
+        <span class="toggle-lbl">°F Fahrenheit</span>
       </div>
     </div>
 
@@ -362,7 +370,27 @@
 
     // ── Update all cards ──────────────────────────────────────────────────────
     function update() {
-      const temp    = parseFloat(document.getElementById('sl-temp').value);
+      const useFahrenheit = document.getElementById('tog-unit').checked;
+      const unit = useFahrenheit ? 'F' : 'C';
+
+      // Keep slider range in sync with unit (convert value when switching)
+      const tempSlider = document.getElementById('sl-temp');
+      const prevUnit = tempSlider.dataset.unit || 'C';
+      if (unit !== prevUnit) {
+        const v = parseFloat(tempSlider.value);
+        if (useFahrenheit) {
+          tempSlider.min   = '-4';
+          tempSlider.max   = '122';
+          tempSlider.value = (v * 9/5 + 32).toFixed(1);
+        } else {
+          tempSlider.min   = '-20';
+          tempSlider.max   = '50';
+          tempSlider.value = ((v - 32) * 5/9).toFixed(1);
+        }
+        tempSlider.dataset.unit = unit;
+      }
+
+      const temp    = parseFloat(tempSlider.value);
       const hum     = parseFloat(document.getElementById('sl-hum').value);
       const bat     = parseInt(document.getElementById('sl-bat').value);
       const hasName = document.getElementById('tog-name').checked;
@@ -371,9 +399,17 @@
       const bgCol   = document.getElementById('col-bg').value;
 
       // Value labels
-      document.getElementById('lbl-temp').textContent = `${temp.toFixed(1)} °C`;
+      document.getElementById('lbl-temp').textContent = `${temp.toFixed(1)} °${unit}`;
       document.getElementById('lbl-hum').textContent  = `${hum.toFixed(1)} %`;
       document.getElementById('lbl-bat').textContent  = `${bat} %`;
+
+      // Update temperature band hints
+      const bandHints = useFahrenheit
+        ? ['&lt;32°F', '32–75°F', '75–90°F', '&gt;90°F']
+        : ['&lt;0°C',  '0–24°C',  '24–32°C', '&gt;32°C'];
+      document.querySelectorAll('#temp-hints span').forEach((el, i) => {
+        el.innerHTML = bandHints[i];
+      });
 
       const hass = mockHass(temp, hum, bat, unavail);
 
@@ -383,17 +419,23 @@
       // Reconfigure cards whose config changes dynamically
       cName.setConfig({
         temperature: T, humidity: H, battery: B,
+        unit,
         ...(hasName ? { name: 'Bedroom' } : {}),
       });
+      cNoName.setConfig({ temperature: T, humidity: H, battery: B, unit });
+      cSmall.setConfig({ temperature: T, humidity: H, battery: B, unit, name: 'Bedroom' });
       cBg.setConfig({
         temperature: T, humidity: H, battery: B,
+        unit,
         name: 'Bedroom',
         ...(bgOn ? { background: bgCol } : {}),
       });
 
       // Re-push hass after setConfig (setConfig re-renders; hass must be set)
-      cName.hass = hass;
-      cBg.hass   = hass;
+      cName.hass   = hass;
+      cNoName.hass = hass;
+      cSmall.hass  = hass;
+      cBg.hass     = hass;
     }
 
     // ── Theme toggle ──────────────────────────────────────────────────────────
@@ -442,6 +484,16 @@
         <div class="shot-label">assets/picture-elements.png</div>
       </div>
 
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope" id="shot-fahrenheit"></div>
+        <div class="shot-label">assets/fahrenheit.png</div>
+      </div>
+
+      <div class="shot-group">
+        <div class="shot-wrap dark-scope" id="shot-fahrenheit-hot"></div>
+        <div class="shot-label">assets/fahrenheit-hot.png</div>
+      </div>
+
     </div>
   </section>
 
@@ -461,12 +513,14 @@
         document.getElementById(wrapId).appendChild(el);
       }
 
-      shot('shot-dark',     { name: 'Bedroom' },                          24.2, 45.1, 72);
-      shot('shot-light',    { name: 'Bedroom' },                          24.2, 45.1, 72);
-      shot('shot-warning',  { name: 'Bedroom' },                          22.4, 56.2, 22);
-      shot('shot-critical', { name: 'Bedroom' },                          19.8, 63.0,  8);
-      shot('shot-bg',       { name: 'Bedroom', background: '#1a2744' },   24.2, 45.1, 72);
-      shot('shot-small',    { name: 'Bedroom' },                          24.2, 45.1, 72);
+      shot('shot-dark',          { name: 'Bedroom' },                          24.2,  45.1, 72);
+      shot('shot-light',         { name: 'Bedroom' },                          24.2,  45.1, 72);
+      shot('shot-warning',       { name: 'Bedroom' },                          22.4,  56.2, 22);
+      shot('shot-critical',      { name: 'Bedroom' },                          19.8,  63.0,  8);
+      shot('shot-bg',            { name: 'Bedroom', background: '#1a2744' },   24.2,  45.1, 72);
+      shot('shot-small',         { name: 'Bedroom' },                          24.2,  45.1, 72);
+      shot('shot-fahrenheit',    { name: 'Bedroom', unit: 'F' },               75.6,  45.1, 72);
+      shot('shot-fahrenheit-hot',{ name: 'Bedroom', unit: 'F' },              104.0,  30.0, 55);
     })();
   </script>
 

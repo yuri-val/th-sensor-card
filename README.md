@@ -14,6 +14,10 @@ Scales cleanly at any size using CSS container queries — works equally well as
 |:---:|:---:|:---:|
 | ![Battery warning](assets/battery-warning.png) | ![Battery critical](assets/battery-critical.png) | ![picture-elements](assets/picture-elements.png) |
 
+| Fahrenheit | Fahrenheit hot |
+|:---:|:---:|
+| ![Fahrenheit](assets/fahrenheit.png) | ![Fahrenheit hot](assets/fahrenheit-hot.png) |
+
 | Real example |
 |:---:|
 | ![Real example](assets/real-example.png) |
@@ -62,6 +66,7 @@ type: module
 | `humidity`    | `string` | ✅        | Entity ID of the humidity sensor                          |
 | `battery`     | `string` | ✅        | Entity ID of the battery sensor                           |
 | `name`        | `string` |           | Optional card title shown at the top                     |
+| `unit`        | `string` |           | Temperature unit: `C` (default) or `F`                   |
 | `background`  | `string` |           | Custom CSS color for the card background                  |
 | `style`       | `object` |           | CSS properties applied to the host element (picture-elements positioning) |
 
@@ -90,6 +95,17 @@ name: Bedroom
 background: "#1a2744"
 ```
 
+### Fahrenheit
+
+```yaml
+type: custom:th-sensor-card
+temperature: sensor.bedroom_temperature
+humidity: sensor.bedroom_humidity
+battery: sensor.bedroom_battery
+name: Bedroom
+unit: F
+```
+
 ### Inside picture-elements (floorplan)
 
 ```yaml
@@ -111,12 +127,23 @@ elements:
 
 ## Temperature color thresholds
 
+### Celsius (default)
+
 | Range      | Color   |
 |------------|---------|
 | < 0 °C     | 🔵 blue `#60a5fa` |
 | 0 – 24 °C  | neutral (`--primary-text-color`) |
 | 24 – 32 °C | 🟠 orange `#fb923c` |
 | > 32 °C    | 🔴 red `#f87171` |
+
+### Fahrenheit (`unit: F`)
+
+| Range       | Color   |
+|-------------|---------|
+| < 32 °F     | 🔵 blue `#60a5fa` |
+| 32 – 75 °F  | neutral (`--primary-text-color`) |
+| 75 – 90 °F  | 🟠 orange `#fb923c` |
+| > 90 °F     | 🔴 red `#f87171` |
 
 ---
 

@@ -61,9 +61,15 @@ class ThSensorCard extends HTMLElement {
     return 'var(--success-color, #4CAF50)';
   }
 
-  _tempColor(raw) {
+  _tempColor(raw, unit) {
     if (raw === null) return 'var(--primary-text-color)';
     const v = parseFloat(raw);
+    if (unit === 'F') {
+      if (v <  32) return '#60a5fa';  // cold  — blue
+      if (v <  75) return 'var(--primary-text-color)';  // comfortable — neutral
+      if (v <  90) return '#fb923c';  // warm  — orange
+      return '#f87171';               // hot   — red
+    }
     if (v <  0)  return '#60a5fa';  // cold  — blue
     if (v < 24)  return 'var(--primary-text-color)';  // comfortable — neutral
     if (v < 32)  return '#fb923c';  // warm  — orange
@@ -79,10 +85,11 @@ class ThSensorCard extends HTMLElement {
     const hRaw = this._getState(this._config.humidity);
     const bRaw = this._getState(this._config.battery);
 
+    const unit    = (this._config.unit || 'C').toUpperCase();
     const temp   = tRaw !== null ? parseFloat(tRaw).toFixed(1) : '--';
     const hum    = hRaw !== null ? parseFloat(hRaw).toFixed(1) : '--';
     const bat    = bRaw !== null ? `${parseInt(bRaw, 10)}%`    : '--';
-    const tempClr = this._tempColor(tRaw);
+    const tempClr = this._tempColor(tRaw, unit);
     const batClr  = this._batteryColor(bRaw);
 
     const name = this._config.name;
@@ -249,8 +256,8 @@ class ThSensorCard extends HTMLElement {
           ${name ? `<div class="name">${name}</div>` : ''}
 
           <div class="temp">
-            <span class="temp-val">${temp}</span>
-            <span class="temp-unit">°C</span>
+            <span class="temp-val" style="font-size:${parseFloat(temp) > 100 ? '30cqw' : '40cqw'}">${temp}</span>
+            <span class="temp-unit">°${unit}</span>
           </div>
 
           <div class="divider-h"></div>
